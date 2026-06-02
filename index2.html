@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A* Shortest Path Navigation System</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
+
+body{
+    background:linear-gradient(135deg,#083a6b,#abbed6);
+    min-height:100vh;
+    padding:25px;
+    color:#1e293b;
+}
+
+.title{
+    text-align:center;
+    font-size:42px;
+    margin-bottom:25px;
+    color:#0f172a;
+    font-weight:600;
+    letter-spacing:1px;
+}
+
+.container{
+    display:flex;
+    gap:20px;
+    max-width:1600px;
+    margin:auto;
+}
+
+.sidebar{
+    width:320px;
+    background:rgb(182, 208, 229);
+    padding:22px;
+    border-radius:22px;
+    box-shadow:0 8px 25px rgba(0,0,0,0.08);
+    border:1px solid rgba(255,255,255,0.5);
+}
+
+.sidebar h2{
+    margin-bottom:18px;
+    color:#2563eb;
+    font-size:24px;
+}
+
+button{
+    width:100%;
+    padding:14px;
+    margin-top:12px;
+    border:none;
+    border-radius:14px;
+    font-size:15px;
+    cursor:pointer;
+    transition:0.3s;
+    font-weight:500;
+}
+
+button:hover{
+    transform:translateY(-2px);
+}
+
+.start-btn{
+    background:#22c55e;
+    color:white;
+}
+
+.start-btn:hover{
+    background:#16a34a;
+}
+
+.reset-btn{
+    background:#ef4444;
+    color:white;
+}
+
+.reset-btn:hover{
+    background:#dc2626;
+}
+
+.clear-btn{
+    background:#475569;
+    color:white;
+}
+
+.clear-btn:hover{
+    background:#334155;
+}
+
+.mode-title{
+    margin-top:25px;
+    margin-bottom:10px;
+    color:#2563eb;
+    font-size:18px;
+}
+
+.mode-btn{
+    background:#edf0f3;
+    color:#1e293b;
+}
+
+.mode-btn.active{
+    background:#2563eb;
+    color:white;
+}
+
+.speed-box{
+    margin-top:20px;
+}
+
+input[type="range"]{
+    width:100%;
+    margin-top:10px;
+}
+
+.info-box{
+    margin-top:25px;
+    background:#e8ecf1;
+    padding:18px;
+    border-radius:16px;
+    border:1px solid #e2e8f0;
+}
+
+.info-box p{
+    margin-top:10px;
+    font-size:15px;
+}
+
+.legend{
+    margin-top:25px;
+}
+
+.legend-item{
+    display:flex;
+    align-items:center;
+    margin-top:12px;
+}
+
+.box{
+    width:20px;
+    height:20px;
+    margin-right:10px;
+    border-radius:5px;
+}
+
+.start{
+    background:#22c55e;
+}
+
+.end{
+    background:#ef4444;
+}
+
+.wall{
+    background:#1e293b;
+}
+
+.visited{
+    background:#60a5fa;
+}
+
+.path{
+    background:#facc15;
+}
+
+.grid-container{
+    flex:1;
+    background:rgb(182, 208, 229);
+    padding:22px;
+    border-radius:22px;
+    box-shadow:0 8px 25px rgba(0,0,0,0.08);
+    overflow:auto;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(25,30px);
+    gap:3px;
+    justify-content:center;
+}
+
+.cell{
+    width:30px;
+    height:30px;
+    background:#f1f5f9;
+    border-radius:6px;
+    transition:0.2s;
+    border:1px solid #e2e8f0;
+}
+
+.cell:hover{
+    transform:scale(1.05);
+}
+
+.cell.start{
+    background:#22c55e;
+}
+
+.cell.end{
+    background:#ef4444;
+}
+
+.cell.wall{
+    background:#1e293b;
+}
+
+.cell.visited{
+    background:#60a5fa;
+}
+
+.cell.path{
+    background:#facc15;
+}
+
+.footer{
+    text-align:center;
+    margin-top:18px;
+    color:#64748b;
+    font-size:14px;
+}
+
+@media(max-width:1100px){
+
+    .container{
+        flex-direction:column;
+    }
+
+    .sidebar{
+        width:100%;
+    }
+
+    .grid{
+        grid-template-columns:repeat(25,22px);
+    }
+
+    .cell{
+        width:22px;
+        height:22px;
+    }
+
+    .title{
+        font-size:30px;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<h1 class="title">A* Shortest Path Navigation System</h1>
+
+<div class="container">
+
+<div class="sidebar">
+
+<h2>Simulation Controls</h2>
+
+<button class="start-btn" onclick="startSimulation()">
+▶ Start Simulation
+</button>
+
+<button class="reset-btn" onclick="resetGrid()">
+⟳ Reset Grid
+</button>
+
+<button class="clear-btn" onclick="clearPath()">
+🗑 Clear Path
+</button>
+
+<button class="clear-btn" onclick="generateMaze()">
+🎲 Generate Random Maze
+</button>
+
+<h3 class="mode-title">Grid Editing Modes</h3>
+
+<button class="mode-btn active"
+id="startMode"
+onclick="setMode('start')">
+🟢 Set Start Node
+</button>
+
+<button class="mode-btn"
+id="endMode"
+onclick="setMode('end')">
+🔴 Set End Node
+</button>
+
+<button class="mode-btn"
+id="wallMode"
+onclick="setMode('wall')">
+⬛ Add Obstacles
+</button>
+
+<div class="speed-box">
+
+<h3 class="mode-title">Simulation Speed</h3>
+
+<input type="range"
+min="10"
+max="200"
+value="40"
+id="speedSlider">
+
+</div>
+
+<div class="info-box">
+
+<h3>Simulation Result</h3>
+
+<p>Total Cost: <span id="cost">0</span></p>
+
+<p>Status: <span id="status">Waiting...</span></p>
+
+</div>
+
+<div class="legend">
+
+<h3 class="mode-title">Legend</h3>
+
+<div class="legend-item">
+<div class="box start"></div>
+<span>Start Node</span>
+</div>
+
+<div class="legend-item">
+<div class="box end"></div>
+<span>Destination Node</span>
+</div>
+
+<div class="legend-item">
+<div class="box wall"></div>
+<span>Obstacle / Wall</span>
+</div>
+
+<div class="legend-item">
+<div class="box visited"></div>
+<span>Visited Nodes</span>
+</div>
+
+<div class="legend-item">
+<div class="box path"></div>
+<span>Shortest Path</span>
+</div>
+
+</div>
+
+</div>
+
+<div class="grid-container">
+<div class="grid" id="grid"></div>
+</div>
+
+</div>
+
+
+<script>
+
+const rows = 20;
+const cols = 25;
+
+const grid = document.getElementById("grid");
+
+let currentMode = "start";
+
+let startNode = null;
+let endNode = null;
+
+let cells = [];
+
+for(let r=0; r<rows; r++){
+
+    let row = [];
+
+    for(let c=0; c<cols; c++){
+
+        const cell = document.createElement("div");
+
+        cell.classList.add("cell");
+
+        cell.dataset.row = r;
+        cell.dataset.col = c;
+
+        cell.addEventListener("click", ()=>handleCellClick(cell));
+
+        grid.appendChild(cell);
+
+        row.push(cell);
+    }
+
+    cells.push(row);
+}
+
+function setMode(mode){
+
+    currentMode = mode;
+
+    document.querySelectorAll(".mode-btn")
+    .forEach(btn=>btn.classList.remove("active"));
+
+    if(mode==="start")
+        document.getElementById("startMode")
+        .classList.add("active");
+
+    if(mode==="end")
+        document.getElementById("endMode")
+        .classList.add("active");
+
+    if(mode==="wall")
+        document.getElementById("wallMode")
+        .classList.add("active");
+}
+
+function handleCellClick(cell){
+
+    if(currentMode==="start"){
+
+        if(startNode)
+            startNode.classList.remove("start");
+
+        cell.classList.remove("wall","end");
+
+        cell.classList.add("start");
+
+        startNode = cell;
+    }
+
+    else if(currentMode==="end"){
+
+        if(endNode)
+            endNode.classList.remove("end");
+
+        cell.classList.remove("wall","start");
+
+        cell.classList.add("end");
+
+        endNode = cell;
+    }
+
+    else if(currentMode==="wall"){
+
+        if(
+            !cell.classList.contains("start") &&
+            !cell.classList.contains("end")
+        ){
+
+            cell.classList.toggle("wall");
+        }
+    }
+}
+
+function sleep(ms){
+
+    return new Promise(resolve=>setTimeout(resolve,ms));
+}
+
+function heuristic(a,b){
+
+    return Math.abs(a.row-b.row) +
+           Math.abs(a.col-b.col);
+}
+
+async function startSimulation(){
+
+    if(!startNode || !endNode){
+
+        alert("Please set start and end nodes");
+        return;
+    }
+
+    clearPath();
+
+    document.getElementById("status").innerText =
+    "Searching Path...";
+
+    let openSet = [];
+
+    let start = {
+        row:parseInt(startNode.dataset.row),
+        col:parseInt(startNode.dataset.col),
+        g:0,
+        h:0,
+        f:0,
+        parent:null
+    };
+
+    let end = {
+        row:parseInt(endNode.dataset.row),
+        col:parseInt(endNode.dataset.col)
+    };
+
+    openSet.push(start);
+
+    let visited = new Set();
+
+    while(openSet.length > 0){
+
+        openSet.sort((a,b)=>a.f-b.f);
+
+        let current = openSet.shift();
+
+        let key = `${current.row}-${current.col}`;
+
+        if(visited.has(key))
+            continue;
+
+        visited.add(key);
+
+        if(
+            current.row === end.row &&
+            current.col === end.col
+        ){
+
+            let path = [];
+
+            let temp = current;
+
+            while(temp){
+
+                path.push(temp);
+
+                temp = temp.parent;
+            }
+
+            path.reverse();
+
+            for(let node of path){
+
+                let cell =
+                cells[node.row][node.col];
+
+                if(
+                    !cell.classList.contains("start") &&
+                    !cell.classList.contains("end")
+                ){
+
+                    cell.classList.remove("visited");
+
+                    cell.classList.add("path");
+
+                    await sleep(40);
+                }
+            }
+
+            document.getElementById("cost")
+            .innerText = current.g;
+
+            document.getElementById("status")
+            .innerText = "Path Found Successfully ✅";
+
+            return;
+        }
+
+        let directions = [
+            [1,0],
+            [-1,0],
+            [0,1],
+            [0,-1]
+        ];
+
+        for(let dir of directions){
+
+            let nr = current.row + dir[0];
+            let nc = current.col + dir[1];
+
+            if(
+                nr>=0 &&
+                nc>=0 &&
+                nr<rows &&
+                nc<cols
+            ){
+
+                let cell = cells[nr][nc];
+
+                if(cell.classList.contains("wall"))
+                    continue;
+
+                let neighborKey = `${nr}-${nc}`;
+
+                if(visited.has(neighborKey))
+                    continue;
+
+                let g = current.g + 1;
+
+                let h = heuristic(
+                    {row:nr,col:nc},
+                    end
+                );
+
+                let f = g + h;
+
+                openSet.push({
+                    row:nr,
+                    col:nc,
+                    g,h,f,
+                    parent:current
+                });
+
+                if(
+                    !cell.classList.contains("start") &&
+                    !cell.classList.contains("end")
+                ){
+
+                    cell.classList.add("visited");
+
+                    await sleep(
+                        document.getElementById
+                        ("speedSlider").value
+                    );
+                }
+            }
+        }
+    }
+
+    document.getElementById("status")
+    .innerText = "No Path Found ❌";
+}
+
+function clearPath(){
+
+    for(let r=0; r<rows; r++){
+
+        for(let c=0; c<cols; c++){
+
+            cells[r][c]
+            .classList.remove("visited","path");
+        }
+    }
+
+    document.getElementById("cost")
+    .innerText = "0";
+
+    document.getElementById("status")
+    .innerText = "Waiting...";
+}
+
+function resetGrid(){
+
+    for(let r=0; r<rows; r++){
+
+        for(let c=0; c<cols; c++){
+
+            cells[r][c].className = "cell";
+        }
+    }
+
+    startNode = null;
+    endNode = null;
+
+    document.getElementById("cost")
+    .innerText = "0";
+
+    document.getElementById("status")
+    .innerText = "Waiting...";
+}
+
+function generateMaze(){
+
+    resetGrid();
+
+    for(let r=0; r<rows; r++){
+
+        for(let c=0; c<cols; c++){
+
+            if(Math.random() < 0.28){
+
+                cells[r][c]
+                .classList.add("wall");
+            }
+        }
+    }
+
+    let startR =
+    Math.floor(Math.random()*rows);
+
+    let startC =
+    Math.floor(Math.random()*cols);
+
+    cells[startR][startC]
+    .classList.remove("wall");
+
+    cells[startR][startC]
+    .classList.add("start");
+
+    startNode = cells[startR][startC];
+
+    let endR,endC;
+
+    do{
+
+        endR =
+        Math.floor(Math.random()*rows);
+
+        endC =
+        Math.floor(Math.random()*cols);
+
+    }
+    while(
+        endR===startR &&
+        endC===startC
+    );
+
+    cells[endR][endC]
+    .classList.remove("wall");
+
+    cells[endR][endC]
+    .classList.add("end");
+
+    endNode = cells[endR][endC];
+
+    document.getElementById("status")
+    .innerText =
+    "Random Maze Generated 🎲";
+}
+
+</script>
+
+</body>
+</html>

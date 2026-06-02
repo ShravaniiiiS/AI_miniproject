@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Optimal Route Finder using A* Algorithm</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
+
+body{
+
+    background:
+    radial-gradient(circle at top left,#2563eb 0%,transparent 30%),
+    radial-gradient(circle at bottom right,#06b6d4 0%,transparent 30%),
+    linear-gradient(135deg,#020617,#0f172a);
+
+    color:white;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:30px;
+}
+
+.container{
+
+    width:100%;
+    max-width:1350px;
+
+    background:rgba(17,24,39,0.95);
+
+    border-radius:25px;
+
+    overflow:hidden;
+
+    display:flex;
+
+    box-shadow:0 0 30px rgba(0,0,0,0.5);
+
+    border:1px solid rgba(255,255,255,0.08);
+}
+
+/* LEFT PANEL */
+
+.left{
+
+    width:35%;
+
+    padding:40px;
+
+    background:rgba(15,23,42,0.95);
+
+    border-right:1px solid rgba(255,255,255,0.08);
+}
+
+.logo{
+
+    font-size:34px;
+
+    font-weight:700;
+
+    color:#38bdf8;
+
+    margin-bottom:12px;
+}
+
+.subtitle{
+
+    color:#cbd5e1;
+
+    margin-bottom:35px;
+
+    line-height:1.6;
+}
+
+.input-group{
+
+    margin-bottom:25px;
+}
+
+label{
+
+    display:block;
+
+    margin-bottom:10px;
+
+    color:#cbd5e1;
+}
+
+select{
+
+    width:100%;
+
+    padding:15px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:#1e293b;
+
+    color:white;
+
+    font-size:16px;
+
+    outline:none;
+}
+
+button{
+
+    width:100%;
+
+    padding:16px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:#38bdf8;
+
+    color:black;
+
+    font-size:17px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:0.3s;
+
+    margin-top:10px;
+}
+
+button:hover{
+
+    transform:translateY(-3px);
+
+    background:#0ea5e9;
+}
+
+.result{
+
+    margin-top:35px;
+
+    background:#111827;
+
+    padding:25px;
+
+    border-radius:18px;
+}
+
+.result h2{
+
+    margin-bottom:20px;
+
+    color:#38bdf8;
+}
+
+.result-item{
+
+    background:#1e293b;
+
+    padding:15px;
+
+    border-radius:12px;
+
+    margin-bottom:15px;
+
+    color:#e2e8f0;
+}
+
+/* RIGHT PANEL */
+
+.right{
+
+    flex:1;
+
+    position:relative;
+
+    background:#081120;
+
+    overflow:hidden;
+}
+
+svg{
+
+    width:100%;
+
+    height:100%;
+}
+
+.city{
+
+    fill:#38bdf8;
+
+    stroke:white;
+
+    stroke-width:3;
+
+    transition:0.3s;
+}
+
+.city:hover{
+
+    fill:#22c55e;
+}
+
+.city-label{
+
+    fill:white;
+
+    font-size:14px;
+}
+
+.route{
+
+    stroke:#475569;
+
+    stroke-width:4;
+}
+
+.active{
+
+    stroke:#22c55e;
+
+    stroke-width:6;
+
+    filter:drop-shadow(0 0 8px #22c55e);
+}
+
+.legend{
+
+    position:absolute;
+
+    bottom:20px;
+
+    left:20px;
+
+    background:#111827;
+
+    padding:15px;
+
+    border-radius:15px;
+
+    border:1px solid rgba(255,255,255,0.08);
+}
+
+.legend p{
+
+    margin-bottom:8px;
+
+    font-size:14px;
+}
+
+.header{
+
+    position:absolute;
+
+    top:20px;
+
+    right:20px;
+
+    background:#111827;
+
+    padding:12px 20px;
+
+    border-radius:12px;
+
+    font-size:14px;
+
+    border:1px solid rgba(255,255,255,0.08);
+}
+
+@media(max-width:950px){
+
+    .container{
+
+        flex-direction:column;
+    }
+
+    .left{
+
+        width:100%;
+    }
+
+    .right{
+
+        height:650px;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- LEFT PANEL -->
+
+<div class="left">
+
+<div class="logo">OptiPath AI</div>
+
+<p class="subtitle">
+
+AI-Based Optimal Route Finder between cities using
+the A* Search Algorithm.
+
+</p>
+
+<div class="input-group">
+
+<label>Source City</label>
+
+<select id="source">
+
+<option>Bangalore</option>
+<option>Chennai</option>
+<option>Hyderabad</option>
+<option>Mumbai</option>
+<option>Pune</option>
+<option>Delhi</option>
+<option>Kolkata</option>
+<option>Ahmedabad</option>
+<option>Jaipur</option>
+<option>Goa</option>
+<option>Kochi</option>
+<option>Bhopal</option>
+<option>Lucknow</option>
+
+</select>
+
+</div>
+
+<div class="input-group">
+
+<label>Destination City</label>
+
+<select id="destination">
+
+<option>Chennai</option>
+<option>Bangalore</option>
+<option>Hyderabad</option>
+<option>Mumbai</option>
+<option>Pune</option>
+<option>Delhi</option>
+<option>Kolkata</option>
+<option>Ahmedabad</option>
+<option>Jaipur</option>
+<option>Goa</option>
+<option>Kochi</option>
+<option>Bhopal</option>
+<option>Lucknow</option>
+
+</select>
+
+</div>
+
+<button onclick="findRoute()">
+
+Find Optimal Route
+
+</button>
+
+<div class="result">
+
+<h2>Route Details</h2>
+
+<div class="result-item">
+📍 Route:
+<span id="route">-</span>
+</div>
+
+<div class="result-item">
+🛣 Total Distance:
+<span id="distance">-</span>
+</div>
+
+<div class="result-item">
+💰 Minimal Cost:
+<span id="cost">-</span>
+</div>
+
+<div class="result-item">
+🧠 Algorithm:
+A* Search Algorithm
+</div>
+
+</div>
+
+</div>
+
+<!-- RIGHT PANEL -->
+
+<div class="right">
+
+<div class="header">
+Optimal Route Visualization
+</div>
+
+<svg viewBox="0 0 1000 700">
+
+<!-- ROUTE LINES -->
+
+<line id="Bangalore-Chennai" class="route"
+x1="300" y1="520"
+x2="470" y2="540"/>
+
+<line id="Bangalore-Hyderabad" class="route"
+x1="300" y1="520"
+x2="380" y2="320"/>
+
+<line id="Hyderabad-Chennai" class="route"
+x1="380" y1="320"
+x2="470" y2="540"/>
+
+<line id="Hyderabad-Pune" class="route"
+x1="380" y1="320"
+x2="260" y2="250"/>
+
+<line id="Pune-Mumbai" class="route"
+x1="260" y1="250"
+x2="200" y2="170"/>
+
+<line id="Mumbai-Delhi" class="route"
+x1="200" y1="170"
+x2="550" y2="120"/>
+
+<line id="Delhi-Kolkata" class="route"
+x1="550" y1="120"
+x2="820" y2="220"/>
+
+<line id="Chennai-Kolkata" class="route"
+x1="470" y1="540"
+x2="820" y2="220"/>
+
+<line id="Mumbai-Ahmedabad" class="route"
+x1="200" y1="170"
+x2="150" y2="250"/>
+
+<line id="Ahmedabad-Jaipur" class="route"
+x1="150" y1="250"
+x2="420" y2="130"/>
+
+<line id="Delhi-Jaipur" class="route"
+x1="550" y1="120"
+x2="420" y2="130"/>
+
+<line id="Bangalore-Goa" class="route"
+x1="300" y1="520"
+x2="170" y2="430"/>
+
+<line id="Chennai-Kochi" class="route"
+x1="470" y1="540"
+x2="360" y2="630"/>
+
+<line id="Bangalore-Kochi" class="route"
+x1="300" y1="520"
+x2="360" y2="630"/>
+
+<line id="Delhi-Lucknow" class="route"
+x1="550" y1="120"
+x2="700" y2="120"/>
+
+<line id="Lucknow-Kolkata" class="route"
+x1="700" y1="120"
+x2="820" y2="220"/>
+
+<line id="Delhi-Bhopal" class="route"
+x1="550" y1="120"
+x2="520" y2="300"/>
+
+<line id="Hyderabad-Bhopal" class="route"
+x1="380" y1="320"
+x2="520" y2="300"/>
+
+<!-- CITIES -->
+
+<circle class="city" cx="300" cy="520" r="12"/>
+<text class="city-label" x="250" y="555">Bangalore</text>
+
+<circle class="city" cx="470" cy="540" r="12"/>
+<text class="city-label" x="430" y="575">Chennai</text>
+
+<circle class="city" cx="380" cy="320" r="12"/>
+<text class="city-label" x="330" y="355">Hyderabad</text>
+
+<circle class="city" cx="200" cy="170" r="12"/>
+<text class="city-label" x="155" y="145">Mumbai</text>
+
+<circle class="city" cx="260" cy="250" r="12"/>
+<text class="city-label" x="235" y="285">Pune</text>
+
+<circle class="city" cx="550" cy="120" r="12"/>
+<text class="city-label" x="520" y="95">Delhi</text>
+
+<circle class="city" cx="820" cy="220" r="12"/>
+<text class="city-label" x="780" y="195">Kolkata</text>
+
+<circle class="city" cx="150" cy="250" r="12"/>
+<text class="city-label" x="95" y="285">Ahmedabad</text>
+
+<circle class="city" cx="420" cy="130" r="12"/>
+<text class="city-label" x="390" y="105">Jaipur</text>
+
+<circle class="city" cx="170" cy="430" r="12"/>
+<text class="city-label" x="145" y="465">Goa</text>
+
+<circle class="city" cx="360" cy="630" r="12"/>
+<text class="city-label" x="335" y="665">Kochi</text>
+
+<circle class="city" cx="520" cy="300" r="12"/>
+<text class="city-label" x="490" y="335">Bhopal</text>
+
+<circle class="city" cx="700" cy="120" r="12"/>
+<text class="city-label" x="665" y="95">Lucknow</text>
+
+</svg>
+
+<div class="legend">
+
+<p>🟢 Optimal Route</p>
+<p>🔵 City Node</p>
+<p>⚪ Connected Path</p>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const graph = {
+
+    Bangalore:{
+        Chennai:350,
+        Hyderabad:570,
+        Goa:560,
+        Kochi:550
+    },
+
+    Chennai:{
+        Bangalore:350,
+        Hyderabad:630,
+        Kolkata:1670,
+        Kochi:690
+    },
+
+    Hyderabad:{
+        Bangalore:570,
+        Chennai:630,
+        Pune:560,
+        Bhopal:780
+    },
+
+    Pune:{
+        Hyderabad:560,
+        Mumbai:150
+    },
+
+    Mumbai:{
+        Pune:150,
+        Delhi:1450,
+        Ahmedabad:530,
+        Goa:590
+    },
+
+    Delhi:{
+        Mumbai:1450,
+        Kolkata:1500,
+        Jaipur:280,
+        Lucknow:550,
+        Ahmedabad:950,
+        Bhopal:740
+    },
+
+    Kolkata:{
+        Delhi:1500,
+        Chennai:1670,
+        Lucknow:980
+    },
+
+    Ahmedabad:{
+        Mumbai:530,
+        Delhi:950,
+        Jaipur:660
+    },
+
+    Jaipur:{
+        Delhi:280,
+        Ahmedabad:660
+    },
+
+    Goa:{
+        Bangalore:560,
+        Mumbai:590
+    },
+
+    Kochi:{
+        Bangalore:550,
+        Chennai:690
+    },
+
+    Bhopal:{
+        Delhi:740,
+        Hyderabad:780
+    },
+
+    Lucknow:{
+        Delhi:550,
+        Kolkata:980
+    }
+};
+
+function heuristic(){
+    return 1;
+}
+
+function aStar(start,goal){
+
+    let openSet = [{
+        city:start,
+        distance:0,
+        path:[start]
+    }];
+
+    let visited = new Set();
+
+    while(openSet.length > 0){
+
+        openSet.sort((a,b)=>
+            a.distance - b.distance
+        );
+
+        let current = openSet.shift();
+
+        if(current.city === goal){
+            return current;
+        }
+
+        visited.add(current.city);
+
+        for(let neighbor in graph[current.city]){
+
+            if(!visited.has(neighbor)){
+
+                openSet.push({
+
+                    city:neighbor,
+
+                    distance:
+                    current.distance +
+                    graph[current.city][neighbor] +
+                    heuristic(),
+
+                    path:[
+                        ...current.path,
+                        neighbor
+                    ]
+                });
+            }
+        }
+    }
+
+    return null;
+}
+
+function clearRoutes(){
+
+    document.querySelectorAll(".route")
+    .forEach(route=>{
+
+        route.classList.remove("active");
+    });
+}
+
+function activateRoute(a,b){
+
+    let id1 = `${a}-${b}`;
+    let id2 = `${b}-${a}`;
+
+    let line =
+    document.getElementById(id1) ||
+    document.getElementById(id2);
+
+    if(line){
+        line.classList.add("active");
+    }
+}
+
+function findRoute(){
+
+    clearRoutes();
+
+    const source =
+    document.getElementById("source").value;
+
+    const destination =
+    document.getElementById("destination").value;
+
+    if(source === destination){
+
+        alert("Please select different cities");
+        return;
+    }
+
+    const result =
+    aStar(source,destination);
+
+    if(result){
+
+        document.getElementById("route")
+        .innerText =
+        result.path.join(" → ");
+
+        document.getElementById("distance")
+        .innerText =
+        result.distance + " km";
+
+        document.getElementById("cost")
+        .innerText =
+        Math.floor(result.distance / 50);
+
+        for(let i=0;
+            i<result.path.length-1;
+            i++){
+
+            activateRoute(
+                result.path[i],
+                result.path[i+1]
+            );
+        }
+    }
+}
+
+</script>
+
+</body>
+</html>
